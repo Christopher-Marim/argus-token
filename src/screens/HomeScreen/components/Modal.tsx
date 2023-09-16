@@ -3,6 +3,7 @@ import { IUser } from "..";
 //@ts-ignore
 import md5 from "react-native-md5";
 import React from "react";
+import { Alert } from "react-native";
 
 interface Props {
   visible: boolean;
@@ -21,7 +22,7 @@ export const ModalSenha = ({ visible, user, onClose, onSubmit }: Props) => {
     if (generateMD5Hash(pass) === user.senha) {
       onSubmit();
     } else {
-      alert("Senha inválida");
+      Alert.alert("Alerta", "Senha inválida");
     }
   };
 
@@ -47,7 +48,7 @@ export const ModalSenha = ({ visible, user, onClose, onSubmit }: Props) => {
             <Button variant="ghost" colorScheme="blueGray" onPress={onClose}>
               Cancelar
             </Button>
-            <Button onPress={handleSubmit}>Presseguir</Button>
+            <Button onPress={handleSubmit}>Prosseguir</Button>
           </Button.Group>
         </Modal.Footer>
       </Modal.Content>

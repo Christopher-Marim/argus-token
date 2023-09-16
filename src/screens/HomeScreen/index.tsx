@@ -7,11 +7,14 @@ import {
   Button,
   PresenceTransition,
   useTheme,
+  Center,
 } from "native-base";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import { ModalSenha } from "./components/Modal";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+import { useAppState } from "@react-native-community/hooks";
 
 export interface IUser {
   cnpj: string;
@@ -66,7 +69,13 @@ export const HomeScreen = () => {
 
     const sum = digitsArray.reduce((acc, digit) => acc + parseInt(digit), 0);
 
-    return sum;
+    // Verifica se a soma está entre 1 e 9
+    if (sum >= 1 && sum <= 9) {
+      // Adiciona um zero à esquerda para preservar o formato
+      return "0" + sum.toString();
+    } else {
+      return sum.toString();
+    }
   }
 
   function calculateFormula(A1: number, B2: number) {
@@ -128,6 +137,7 @@ export const HomeScreen = () => {
     getBarCodeScannerPermissions();
   }, []);
 
+  const appState = useAppState();
   useEffect(() => {
     (async () => {
       const res = await AsyncStorage.getItem("@user");
@@ -136,22 +146,15 @@ export const HomeScreen = () => {
         onSubmitedModal(JSON.parse(res) as IUser);
       }
     })();
-  }, []);
+  }, [appState]);
 
   return (
     <ImageBackground
       source={require("../../assets/background.png")}
       resizeMode="cover"
-      style={{ flex: 1}}
+      style={{ flex: 1, position: "relative" }}
     >
-      <VStack
-        flex={1}
-        h={"full"}
-        width={"full"}
-        p={10}
-        background={"transparent"}
-        alignItems={"center"}
-      >
+      <VStack flex={1} p={10} alignItems={"center"}>
         {visibleModal && (
           <ModalSenha
             visible={visibleModal}
@@ -167,7 +170,7 @@ export const HomeScreen = () => {
         )}
 
         <PresenceTransition
-          visible={visibleCamera || visibleToken}
+          visible={visibleCamera}
           initial={{
             scale: 1,
             translateY: 0,
@@ -181,12 +184,12 @@ export const HomeScreen = () => {
           }}
         >
           <Image
+            mt={10}
             mb={10}
             alt="Logo"
             source={require("../../assets/logo.png")}
             w={200}
             height={200}
-            borderRadius={10}
             resizeMode="contain"
           />
         </PresenceTransition>
@@ -196,11 +199,11 @@ export const HomeScreen = () => {
             width={5}
             rotation={0}
             fill={timerToken}
-            tintColor={colors.blue[500]}
+            tintColor={"#255fa5"}
             backgroundColor="#8c96a0"
           >
             {(fill) => (
-              <Text fontSize={"4xl"} color={"blue.500"}>
+              <Text fontSize={"4xl"} color={"#255fa5"}>
                 {tokenText}
               </Text>
             )}
@@ -211,6 +214,8 @@ export const HomeScreen = () => {
             backgroundColor={"transparent"}
             borderWidth={1}
             borderColor={"blue.400"}
+            alignSelf={"center"}
+            top={Dimensions.get("window").height / 9}
             w={"full"}
             onPress={() => HandleOpenCamera()}
           >
@@ -227,21 +232,39 @@ export const HomeScreen = () => {
           animate={{
             opacity: 1,
             transition: {
-              duration: 250,
+              duration: 150,
             },
           }}
         >
-          <VStack alignItems={"center"} marginTop={-115}>
-            <Text fontSize={"md"} color={"blue.500"}>
-              Escaneie o QRCode
-            </Text>
+          {hasPermission && (
             <BarCodeScanner
               onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
               style={{
                 width: Dimensions.get("window").width,
-                height: Dimensions.get("window").height / 1.85,
+                marginTop: -120,
+                height:
+                  Platform.OS == "ios"
+                    ? Dimensions.get("window").height / 2
+                    : Dimensions.get("window").height / 1.4,
+                zIndex: 1,
               }}
             />
+          )}
+        </PresenceTransition>
+        <Center
+          bg={
+            Platform.OS == "ios"
+              ? "transparent"
+              : visibleCamera && !visibleToken
+              ? "white"
+              : "transparent"
+          }
+          position={"absolute"}
+          bottom={0}
+          w={Dimensions.get("window").width}
+          zIndex={20}
+        >
+          {visibleCamera && !visibleToken && (
             <Button
               backgroundColor={"red.400"}
               mt={1}
@@ -254,22 +277,20 @@ export const HomeScreen = () => {
               }}
             >
               <Text fontSize={"md"} color={"white"}>
-                Voltar
+                Cancelar
               </Text>
             </Button>
-          </VStack>
-        </PresenceTransition>
-
-        <Image
-          position={"absolute"}
-          bottom={0}
-          alt="Logo"
-          source={require("../../assets/icon.png")}
-          w={180}
-          height={24}
-          opacity={0.5}
-          resizeMode="contain"
-        />
+          )}
+          <Image
+            alt="Logo"
+            source={require("../../assets/icon.png")}
+            w={160}
+            height={43}
+            opacity={0.5}
+            mb={10}
+            resizeMode="contain"
+          />
+        </Center>
         {/* <Logo /> */}
       </VStack>
     </ImageBackground>
